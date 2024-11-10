@@ -8,12 +8,26 @@ db.init_app(app)
 
 @app.route('/expenses', methods=['POST'])
 def create_expense():
+    data = request.get_json()
+
+    # Validate the data (optional)
+    # ... (validation logic)
+
+    new_expense = Expense(
+        date=data['date'],
+        amount=data['amount'],
+        category=data['category'],
+        description=data['description'],
+    )
+    db.session.add(new_expense)
+    db.session.commit()
+    return jsonify({'message': 'Expense created successfully!'})
 
 @app.route('/expenses/<int:expense_id>', methods=['PUT'])
 def update_expense(expense_id):
     expense = Expense.query.get_or_404(expense_id)
     data = request.get_json()
-   
+
     expense.date = data.get('date', expense.date)
     expense.amount = data.get('amount', expense.amount)
     expense.category = data.get('category', expense.category)
@@ -24,4 +38,7 @@ def update_expense(expense_id):
 
 @app.route('/expenses/<int:expense_id>', methods=['DELETE'])
 def delete_expense(expense_id):
-    
+    expense = Expense.query.get_or_404(expense_id)
+    db.session.delete(expense)
+    db.session.commit()
+    return jsonify({'message': 'Expense deleted successfully!'})
