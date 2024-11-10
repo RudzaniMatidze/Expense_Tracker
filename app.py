@@ -10,28 +10,16 @@ db.init_app(app)
 
 @app.route('/expenses', methods=['POST'])
 def create_expense():
-  # Get request data (e.g., date, amount, category, description)
-  data = request.get_json()
-
-  if not data or not all(field in data for field in ['date', 'amount', 'category', 'description']):
-    return jsonify({'error': 'Missing required fields'}), 400  # Bad request
-
-  # Create Expense object with validated data
-  new_expense = Expense(
-      date=data['date'],
-      amount=data['amount'],
-      category=data['category'],
-      description=data['description'],
-  )
-
-  # Add expense to database and commit changes
-  db.session.add(new_expense)
-  db.session.commit()
+    # ... (existing code for creating an expense)
 
 @app.route('/expenses/<int:expense_id>', methods=['PUT'])
 def update_expense(expense_id):
+    # ... (implement logic for updating an expense)
 
 @app.route('/expenses/<int:expense_id>', methods=['DELETE'])
 def delete_expense(expense_id):
-
-
+    # Your actual implementation for deleting an expense
+    expense = Expense.query.get_or_404(expense_id)
+    db.session.delete(expense)
+    db.session.commit()
+    return jsonify({'message': 'Expense deleted successfully!'})
