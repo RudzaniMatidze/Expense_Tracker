@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from models import db  # Import db from models.py
 
 # ... (import models and configure database)
 
@@ -27,4 +28,10 @@ def create_expense():
   db.session.add(new_expense)
   db.session.commit()
 
-  return jsonify({'message': 'Expense created successfully!', 'expense': new_expense.serialize()}), 201  # Created
+@app.route('/expenses/<int:expense_id>', methods=['PUT'])
+def update_expense(expense_id):
+
+@app.route('/expenses/<int:expense_id>', methods=['DELETE'])
+def delete_expense(expense_id):
+
+
