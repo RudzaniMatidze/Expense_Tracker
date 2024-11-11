@@ -1,44 +1,35 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
-from models import db  # Import db from models.py
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'  # Replace with your database URI
-db.init_app(app)
+# Initialize the database outside the app to avoid circular import issues
+db = SQLAlchemy()
 
-@app.route('/expenses', methods=['POST'])
-def create_expense():
-    data = request.get_json()
+def create_app():
+    app = Flask(__name__)
 
-    # Validate the data (optional)
-    # ... (validation logic)
+    # Configure the SQLite database
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    new_expense = Expense(
-        date=data['date'],
-        amount=data['amount'],
-        category=data['category'],
-        description=data['description'],
-    )
-    db.session.add(new_expense)
-    db.session.commit()
-    return jsonify({'message': 'Expense created successfully!'})
+    # Initialize the database with the app
+    db.init_app(app)
 
-@app.route('/expenses/<int:expense_id>', methods=['PUT'])
-def update_expense(expense_id):
-    expense = Expense.query.get_or_404(expense_id)
-    data = request.get_json()
+    # Import models and routes after db is initialized
+    with app.app_context():
+        from models import Expense
+        db.create_all()  # Creates the database tables if they don’t exist
 
-    expense.date = data.get('date', expense.date)
-    expense.amount = data.get('amount', expense.amount)
-    expense.category = data.get('category', expense.category)
-    expense.description = data.get('description', expense.description)
+    from routes import expense_routes
+    app.register_blueprint(expense_routes, url_prefix='/api')  # Register blueprint with '/api' prefix
 
-    db.session.commit()
-    return jsonify({'message': 'Expense updated successfully!'})
+    # Root route (home) to serve the HTML page
+    @app.route('/')
+    def home():
+        return render_template('index.html')  # Renders the index.html file
 
-@app.route('/expenses/<int:expense_id>', methods=['DELETE'])
-def delete_expense(expense_id):
-    expense = Expense.query.get_or_404(expense_id)
-    db.session.delete(expense)
-    db.session.commit()
-    return jsonify({'message': 'Expense deleted successfully!'})
+    return app
+
+# To run the app directly
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True)
