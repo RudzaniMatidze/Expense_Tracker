@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="number"], input[type="date"] {
+            padding: 8px;
+            margin-right: 10px;
+            width: 200px;
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Expense Tracker</h1>
+
+<div class="form-container">
+    <h3>Add New Expense</h3>
+    <form id="expense-form">
+        <input type="date" id="expense-date" required>
+        <input type="number" id="expense-amount" placeholder="Amount" required>
+        <input type="text" id="expense-category" placeholder="Category" required>
+        <input type="text" id="expense-description" placeholder="Description" required>
+        <button type="submit">Add Expense</button>
+    </form>
+</div>
+
+<h3>Expense List</h3>
+<table id="expense-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Expenses will be listed here -->
+    </tbody>
+</table>
+
+<script>
+    const expenseForm = document.getElementById('expense-form');
+    const expenseTable = document.getElementById('expense-table').getElementsByTagName('tbody')[0];
+
+    // Fetch expenses from the API
+    function fetchExpenses() {
+        fetch('/api/expenses')
+            .then(response => response.json())
+            .then(data => {
+                expenseTable.innerHTML = '';
+                data.forEach(expense => {
+                    const row = expenseTable.insertRow();
+                    row.innerHTML = `
+                        <td>${expense.id}</td>
+                        <td>${expense.date}</td>
+                        <td>${expense.amount}</td>
+                        <td>${expense.category}</td>
+                        <td>${expense.description}</td>
+                        <td>
+                            <button onclick="deleteExpense(${expense.id})">Delete</button>
+                            <button onclick="editExpense(${expense.id})">Edit</button>
+                        </td>
+                    `;
+                });
+            });
+    }
+
+    // Add a new expense
+    expenseForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const date = document.getElementById('expense-date').value;
+        const amount = document.getElementById('expense-amount').value;
+        const category = document.getElementById('expense-category').value;
+        const description = document.getElementById('expense-description').value;
+
+        const newExpense = { date, amount, category, description };
+
+        fetch('/api/expenses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newExpense)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            fetchExpenses();
+            expenseForm.reset();
+        });
+    });
+
+    // Delete an expense
+    function deleteExpense(expenseId) {
+        fetch(`/api/expenses/${expenseId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            fetchExpenses();
+        });
+    }
+
+    // Edit an expense
+    function editExpense(expenseId) {
+        alert('Edit functionality not implemented yet!');
+    }
+
+    // Fetch expenses when the page loads
+    window.onload = fetchExpenses;
+</script>
+
+</body>
+</html>
