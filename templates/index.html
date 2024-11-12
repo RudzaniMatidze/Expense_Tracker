@@ -33,6 +33,11 @@
             padding: 8px 15px;
             cursor: pointer;
         }
+        #total-expense {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -42,12 +47,17 @@
 <div class="form-container">
     <h3>Add New Expense</h3>
     <form id="expense-form">
+        <input type="hidden" id="expense-id"> <!-- Hidden field to store expense ID -->
         <input type="date" id="expense-date" required>
         <input type="number" id="expense-amount" placeholder="Amount" required>
         <input type="text" id="expense-category" placeholder="Category" required>
         <input type="text" id="expense-description" placeholder="Description" required>
-        <button type="submit">Add Expense</button>
+        <button type="submit" id="submit-button">Add Expense</button>
     </form>
+</div>
+
+<div id="total-expense">
+    Total Expense for the Month: $<span id="monthly-total">0.00</span>
 </div>
 
 <h3>Expense List</h3>
@@ -70,6 +80,16 @@
 <script>
     const expenseForm = document.getElementById('expense-form');
     const expenseTable = document.getElementById('expense-table').getElementsByTagName('tbody')[0];
+    const monthlyTotalSpan = document.getElementById('monthly-total');
+
+    // Fetch total monthly expense from the API
+    function fetchTotalMonthlyExpense() {
+        fetch('/api/expenses/total-monthly')
+            .then(response => response.json())
+            .then(data => {
+                monthlyTotalSpan.textContent = data.total_expense.toFixed(2);
+            });
+    }
 
     // Fetch expenses from the API
     function fetchExpenses() {
@@ -104,8 +124,14 @@
 
         const newExpense = { date, amount, category, description };
 
-        fetch('/api/expenses', {
-            method: 'POST',
+        const expenseId = document.getElementById('expense-id').value;  // Check if we're editing
+
+        // If there's an ID, it's an update (PUT), otherwise, it's a new expense (POST)
+        const method = expenseId ? 'PUT' : 'POST';
+        const url = expenseId ? `/api/expenses/${expenseId}` : '/api/expenses';
+
+        fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -115,7 +141,8 @@
         .then(data => {
             alert(data.message);
             fetchExpenses();
-            expenseForm.reset();
+            fetchTotalMonthlyExpense(); // Update the total after adding or updating an expense
+            resetForm();  // Reset the form after submission
         });
     });
 
@@ -128,16 +155,40 @@
         .then(data => {
             alert(data.message);
             fetchExpenses();
+            fetchTotalMonthlyExpense(); // Update the total after deleting an expense
         });
     }
 
     // Edit an expense
     function editExpense(expenseId) {
-        alert('Edit functionality not implemented yet!');
+        fetch(`/api/expenses/${expenseId}`)
+            .then(response => response.json())
+            .then(expense => {
+                // Populate the form with the expense data
+                document.getElementById('expense-id').value = expense.id;
+                document.getElementById('expense-date').value = expense.date;
+                document.getElementById('expense-amount').value = expense.amount;
+                document.getElementById('expense-category').value = expense.category;
+                document.getElementById('expense-description').value = expense.description;
+
+                // Change the button text to "Update Expense"
+                const submitButton = document.getElementById('submit-button');
+                submitButton.textContent = "Update Expense";
+            });
     }
 
-    // Fetch expenses when the page loads
-    window.onload = fetchExpenses;
+    // Reset the form and button to default (Add Expense)
+    function resetForm() {
+        document.getElementById('expense-form').reset();
+        const submitButton = document.getElementById('submit-button');
+        submitButton.textContent = "Add Expense";
+    }
+
+    // Fetch expenses and total monthly expense when the page loads
+    window.onload = function() {
+        fetchExpenses();
+        fetchTotalMonthlyExpense();
+    };
 </script>
 
 </body>

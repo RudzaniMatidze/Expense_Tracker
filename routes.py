@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from models import Expense
-
+from datetime import datetime
 
 expense_routes = Blueprint('expense_routes', __name__)
 
@@ -50,3 +50,31 @@ def get_expenses():
         'category': expense.category,
         'description': expense.description
     } for expense in expenses])
+
+# Route to fetch a specific expense by ID
+@expense_routes.route('/expenses/<int:expense_id>', methods=['GET'])
+def get_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    return jsonify({
+        'id': expense.id,
+        'date': expense.date,
+        'amount': expense.amount,
+        'category': expense.category,
+        'description': expense.description
+    })
+
+# Route to get the total expenses for the month
+@expense_routes.route('/expenses/total-monthly', methods=['GET'])
+def get_total_monthly_expense():
+    # Get the current date's month and year
+    now = datetime.now()
+    current_month = now.month
+    current_year = now.year
+
+    # Filter expenses for the current month and year
+    total_expense = db.session.query(db.func.sum(Expense.amount)).filter(
+        db.extract('year', Expense.date) == current_year,
+        db.extract('month', Expense.date) == current_month
+    ).scalar() or 0  # Use 0 if no expenses are found
+
+    return jsonify({'total_expense': total_expense})
