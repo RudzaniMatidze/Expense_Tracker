@@ -1,0 +1,33 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+table, th, td {
+    border: 1px solid #ddd;
+}
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+.form-container {
+    margin-bottom: 20px;
+}
+input[type="text"], input[type="number"], input[type="date"], select {
+    padding: 8px;
+    margin-right: 10px;
+    width: 200px;
+}
+button {
+    padding: 8px 15px;
+    cursor: pointer;
+}
+#total-expense {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+}
